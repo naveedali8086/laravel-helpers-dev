@@ -1,0 +1,33 @@
+{
+    "name": "naveedali8086/laravel-helpers-dev",
+    "description": "It contains functions, traits, class that are needed for development",
+    "keywords": ["laravel"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Naveed Ali",
+            "email": "naveedali8086@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1.0",
+        "illuminate/support": "^10.41",
+        "illuminate/console": "^10.44",
+        "illuminate/filesystem": "^10.44"
+    },
+    "autoload": {
+        "psr-4": {
+            "Naveedali8086\\LaravelHelpersDev\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Naveedali8086\\LaravelHelpersDev\\LaravelHelpersDevServiceProvider"
+            ]
+        }
+    }
+}
