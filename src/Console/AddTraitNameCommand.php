@@ -39,8 +39,8 @@ class AddTraitNameCommand extends Command
         // Find the position of class opening bracket
         $classOpeningPosition = strpos($contents, '{');
 
-        $traitsStart = $classOpeningPosition + 1;
-        $useTraitPos = strpos($contents, 'use ', $traitsStart);
+        //$traitsStart = $classOpeningPosition + 1;
+        $useTraitPos = strpos($contents, 'use ', $classOpeningPosition);
 
         $traitNames = [];
         foreach ($traitsToAdd as $trait) {
@@ -53,11 +53,12 @@ class AddTraitNameCommand extends Command
             sort($traitNames);
             $updatedTraits = "\nuse " . implode(', ', $traitNames) . ';';
             // put in the file content]
-            $contents = substr_replace($contents, $updatedTraits, $traitsStart, 0);
+            $contents = substr_replace($contents, $updatedTraits, $classOpeningPosition + 1, 0);
 
         } else { // some traits already exist in file
             $traitEndingPos = strpos($contents, ';', $useTraitPos);
-            $existingTraits = substr($contents, $useTraitPos, ($traitEndingPos - $useTraitPos) + 2);
+            $existingTraits = substr($contents, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
+
             // removing "use", "space after use" and "semicolon"
             $existingTraits = trim(str_replace(["use", " ", ";"], "", $existingTraits));
 
@@ -71,7 +72,7 @@ class AddTraitNameCommand extends Command
             sort($existingTraitsArr);
             $updatedTraits = "use " . implode(', ', $existingTraitsArr) . ';';
 
-            $contents = substr_replace($contents, $updatedTraits, $useTraitPos - 1, ($traitEndingPos - $useTraitPos) + 2);
+            $contents = substr_replace($contents, $updatedTraits, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
         }
 
         // adding traits imports at the top of file after sorting
