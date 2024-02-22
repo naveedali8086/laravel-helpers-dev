@@ -34,13 +34,13 @@ class AddTraitNameCommand extends Command
         }
 
         // Read the contents of the model file
-        $contents = File::get($filePath);
+        $content = File::get($filePath);
 
         // Find the position of class opening bracket
-        $classOpeningPosition = strpos($contents, '{');
+        $classOpeningPosition = strpos($content, '{');
 
         //$traitsStart = $classOpeningPosition + 1;
-        $useTraitPos = strpos($contents, 'use ', $classOpeningPosition);
+        $useTraitPos = strpos($content, 'use ', $classOpeningPosition);
 
         $traitNames = [];
         foreach ($traitsToAdd as $trait) {
@@ -52,12 +52,12 @@ class AddTraitNameCommand extends Command
             // add your traits here
             sort($traitNames);
             $updatedTraits = "\nuse " . implode(', ', $traitNames) . ';';
-            // put in the file content]
-            $contents = substr_replace($contents, $updatedTraits, $classOpeningPosition + 1, 0);
+
+            $content = substr_replace($content, $updatedTraits, $classOpeningPosition + 1, 0);
 
         } else { // some traits already exist in file
-            $traitEndingPos = strpos($contents, ';', $useTraitPos);
-            $existingTraits = substr($contents, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
+            $traitEndingPos = strpos($content, ';', $useTraitPos);
+            $existingTraits = substr($content, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
 
             // removing "use", "space after use" and "semicolon"
             $existingTraits = trim(str_replace(["use", " ", ";"], "", $existingTraits));
@@ -69,35 +69,18 @@ class AddTraitNameCommand extends Command
                     $existingTraitsArr[] = $traitsName;
                 }
             }
+
             sort($existingTraitsArr);
+
             $updatedTraits = "use " . implode(', ', $existingTraitsArr) . ';';
 
-            $contents = substr_replace($contents, $updatedTraits, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
+            $content = substr_replace($content, $updatedTraits, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
         }
 
-        // adding traits imports at the top of file after sorting
-        $namespacePos = strpos($contents, 'namespace');
-        $namespaceSemicolonPos = strpos($contents, ';', $namespacePos);
-        $classKeywordPos = strpos($contents, 'class', $namespaceSemicolonPos);
-        $imports = substr($contents, $namespaceSemicolonPos + 1, ($classKeywordPos - $namespaceSemicolonPos) - 1);
-
-        $imports = explode("\n", trim($imports));
-
-        // add "use " in every element of $traitsToAdd
-        $traitsToAdd = array_map(function ($trait) {
-            return "use " . $trait . ";";
-        }, $traitsToAdd);
-
-        $imports = array_unique(array_merge($imports, $traitsToAdd));
-
-        sort($imports);
-
-        $imports = "\n\n" . implode("\n", $imports) . "\n";
-
-        $contents = substr_replace($contents, $imports, $namespaceSemicolonPos + 1, ($classKeywordPos - $namespaceSemicolonPos) - 1);
+        insertImports($content, $traitsToAdd);
 
         // Write the modified contents back to the file
-        File::put($filePath, $contents);
+        File::put($filePath, $content);
 
         if (windows_os()) {
             $filePath = str_replace('/', '\\', $filePath);

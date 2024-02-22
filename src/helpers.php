@@ -29,4 +29,42 @@ if (!function_exists('copy_migrations')) {
         }
     }
 
+    if (!function_exists('insertImports')) {
+        function insertImports(string &$content, array $classesNamespace): void
+        {
+            // adding imports at the top of file
+            $namespacePos = strpos($content, 'namespace');
+            $namespaceSemicolonPos = strpos($content, ';', $namespacePos);
+
+            // Get  Class' opening bracket position
+            $classKeywordPos = strpos($content, 'class', $namespaceSemicolonPos);
+
+            // get existing imports as string
+            $exisingImports = substr(
+                $content,
+                $namespaceSemicolonPos + 1,
+                ($classKeywordPos - $namespaceSemicolonPos) - 1
+            );
+
+            $exisingImports = explode("\n", trim($exisingImports));
+
+            // append "use " in every element of $classNamespace
+            $classesNamespace = array_map(function ($classNamespace) {
+                return "use " . $classNamespace . ";";
+            }, $classesNamespace);
+
+            $imports = array_unique(array_merge($exisingImports, $classesNamespace));
+
+            sort($imports);
+
+            $imports = "\n\n" . implode("\n", $imports) . "\n";
+
+            $content = substr_replace(
+                $content,
+                $imports, $namespaceSemicolonPos + 1,
+                ($classKeywordPos - $namespaceSemicolonPos) - 1
+            );
+        }
+    }
+
 }
