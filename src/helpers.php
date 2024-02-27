@@ -71,7 +71,7 @@ if (!function_exists('insertImports')) {
     }
 }
 
-if (function_exists('create_table_migration_exists')) {
+if (!function_exists('create_table_migration_exists')) {
     function create_table_migration_exists(array|string $tables): string
     {
         $tables = is_string($tables) ? [$tables] : $tables;
@@ -88,7 +88,12 @@ if (function_exists('create_table_migration_exists')) {
 
                 $pattern = '/Schema::create\s*\(\s*[\'"]' . preg_quote($table, '/') . '[\'"]\s*,\s*/i';
                 if (preg_match($pattern, $content)) {
-                    $migrationFileFoundFor = "Migration file ($migrationFile) for table ($table) already exists";
+                    $migrationFileFoundFor = '------- IMPORTANT -------';
+                    $migrationFileFoundFor .= "Migration file ($migrationFile) for table ($table) already exists\n";
+                    $migrationFileFoundFor .= "To install this package you need to delete above migration file, 
+                    its entry from migrations table as well as drop ($table) table from DB.";
+                    $migrationFileFoundFor .= "Make sure the to backup both (the existing migration file and 
+                    ($table) table data";
                     break;
                 }
             }
