@@ -34,8 +34,10 @@ if (!function_exists('copy_migrations')) {
 }
 
 if (!function_exists('insertImports')) {
-    function insertImports(string &$content, array $classesNamespace): void
+    function insertImports(string &$content, array|string $classesNamespace): void
     {
+        $classesNamespace = is_string($classesNamespace) ? [$classesNamespace] : $classesNamespace;
+
         // adding imports at the top of file
         $namespacePos = strpos($content, 'namespace');
         $namespaceSemicolonPos = strpos($content, ';', $namespacePos);
