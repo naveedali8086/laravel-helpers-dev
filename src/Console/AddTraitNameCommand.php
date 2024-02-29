@@ -10,7 +10,7 @@ class AddTraitNameCommand extends Command
 {
     protected $signature = 'add-traits {file : fully qualified file path in which traits needs to be added} {traits : comma separated fully qualified list of traits that needs to be added}';
 
-    protected $description = 'It adds traits list into the file';
+    protected $description = 'It adds trait(s) into the file';
 
     public function handle()
     {
@@ -39,8 +39,10 @@ class AddTraitNameCommand extends Command
         // Find the position of class opening bracket
         $classOpeningPosition = strpos($content, '{');
 
-        //$traitsStart = $classOpeningPosition + 1;
-        $useTraitPos = strpos($content, 'use ', $classOpeningPosition);
+        // this pattern searches all 3 scenarios of defining the traits in a php class. scenarios are given below
+        $allTraitsRegex = '/use\s+[a-zA-Z0-9_]+(?:,\s*[a-zA-Z0-9_]+)*;/';
+
+        $traitsFound = preg_match($allTraitsRegex, $content, $matches, 0, $classOpeningPosition);
 
         $traitNames = [];
         foreach ($traitsToAdd as $trait) {
@@ -48,7 +50,7 @@ class AddTraitNameCommand extends Command
             $traitNames[] = end($traitParts);
         }
 
-        if ($useTraitPos === false) { // file do not have any trait at all
+        if ($traitsFound === 0) { // file do not have any trait at all
             // add your traits here
             sort($traitNames);
             $updatedTraits = "\nuse " . implode(', ', $traitNames) . ';';
@@ -56,25 +58,87 @@ class AddTraitNameCommand extends Command
             $content = substr_replace($content, $updatedTraits, $classOpeningPosition + 1, 0);
 
         } else { // some traits already exist in file
-            $traitEndingPos = strpos($content, ';', $useTraitPos);
-            $existingTraits = substr($content, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
 
-            // removing "use", "space after use" and "semicolon"
-            $existingTraits = trim(str_replace(["use", " ", ";"], "", $existingTraits));
+            // following are 3 ways to define a trait in a file
+            /*
+            scenario 1:
+            ===========
+                use Trait1, Trait2;
 
-            $existingTraitsArr = explode(',', $existingTraits);
+            scenario 2:
+            ===========
+                use Trait1, Trait2;
+                use Trait3, Trait4;
 
-            foreach ($traitNames as $traitsName) {
-                if (!in_array($traitsName, $existingTraitsArr)) {
-                    $existingTraitsArr[] = $traitsName;
+            scenario 3:
+            ===========
+                use Trait1;
+                use Trait2;
+           */
+
+            // the output of above regex for all the 3 scenarios above is given below:
+            /*
+            scenario 1: (matches found 1)
+            ===========
+            use Trait1, Trait2;
+            regex output: [ 0 => use Trait1, Trait2;]
+
+            scenario 2: (matches found 2)
+            ===========
+                use Trait1, Trait2;
+                use Trait3, Trait4;
+                regex output: [
+                       0 => use Trait1, Trait2;
+                       1 => use Trait3, Trait4;
+                      ]
+
+            scenario 3: (matches found 2)
+            ===========
+                use Trait1;
+                use Trait2;
+                regex output: [
+                       0 => use Trait1;
+                       1 => use Trait2;
+                      ]
+            */
+
+            if (preg_match_all($allTraitsRegex, $content, $matches, 0, $classOpeningPosition)) {
+                // if regex output ($matches[0]) count is 1 then add the trait using any one of the
+                // above scenarios otherwise insert new line having "use " keyword (at the start of traitName)
+                // to add a new trait at the end traits list
+
+                $existingTraits = $matches[0][0];
+                if (count($matches[0]) === 1) { // handling scenario 1
+                    $newTraits = '';
+                    foreach ($traitNames as $traitsName) {
+                        // do not add a trait into the file, if it already exists
+                        $singleTraitsRegex = "/\b" . preg_quote($traitsName, '/') . "\b/";
+                        if (preg_match($singleTraitsRegex, $existingTraits) === 0) {
+                            $newTraits .= "$traitsName, ";
+                        }
+                    }
+                    $newTraits = rtrim($newTraits, ', ');
+
+                    $newTraits = $newTraits ?
+                        str_replace(';', '', $existingTraits) . ", $newTraits;" :
+                        $existingTraits;
+
+                    $content = str_replace($existingTraits, $newTraits, $content);
+                } else {  // handling scenario 2 & 3
+                    $traitsAsString = implode(', ', $matches[0]);
+                    $newTraits = '';
+                    foreach ($traitNames as $traitsName) {
+                        // do not add a trait into the file, if it already exists
+                        $singleTraitsRegex = "/\b" . preg_quote($traitsName, '/') . "\b/";
+                        if (preg_match($singleTraitsRegex, $traitsAsString) === 0) {
+                            $newTraits .= "use $traitsName;\n";
+                        }
+                    }
+                    $lastTrait = end($matches[0]);
+                    $offset = strpos($content, $lastTrait) + strlen($lastTrait);
+                    $content = substr_replace($content, "\n$newTraits", $offset, 0);
                 }
             }
-
-            sort($existingTraitsArr);
-
-            $updatedTraits = "use " . implode(', ', $existingTraitsArr) . ';';
-
-            $content = substr_replace($content, $updatedTraits, $useTraitPos, $traitEndingPos - $useTraitPos + 1);
         }
 
         insertImports($content, $traitsToAdd);
