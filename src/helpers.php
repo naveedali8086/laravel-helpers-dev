@@ -105,4 +105,25 @@ if (!function_exists('create_table_migration_exists')) {
 
         return $migrationFileFoundFor;
     }
+
+    if (!function_exists('getLaravelMajorVersion')) {
+        function getLaravelMajorVersion(): string
+        {
+            $laravelVersion = exec('php artisan -V');
+            // because laravel has semantic versioning
+            preg_match('/\d+\.\d+\.\d+/', $laravelVersion, $matches);
+            return explode('.', $matches[0])[0];
+        }
+    }
+
+    if (!function_exists('getLaravelSemanticVersionSum')) {
+        function getLaravelSemanticVersionSum(): float|int
+        {
+            $laravelVersion = exec('php artisan -V');
+            // because laravel has semantic versioning
+            preg_match('/\d+\.\d+\.\d+/', $laravelVersion, $matches);
+            $versionParts = explode('.', $matches[0]);
+            return array_sum($versionParts);
+        }
+    }
 }
