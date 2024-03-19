@@ -38,38 +38,32 @@ if (!function_exists('insertImports')) {
     {
         $classesNamespace = is_string($classesNamespace) ? [$classesNamespace] : $classesNamespace;
 
-        // adding imports at the top of file
-        $namespacePos = strpos($content, 'namespace');
-        $namespaceSemicolonPos = strpos($content, ';', $namespacePos);
-
-        // Get  Class' opening bracket position
-        $classKeywordPos = strpos($content, 'class', $namespaceSemicolonPos);
-
-        // get existing imports as string
-        $exisingImports = substr(
-            $content,
-            $namespaceSemicolonPos + 1,
-            ($classKeywordPos - $namespaceSemicolonPos) - 1
-        );
-
-        $exisingImports = explode("\n", trim($exisingImports));
-
         // append "use " in every element of $classNamespace
         $classesNamespace = array_map(function ($classNamespace) {
             return "use " . $classNamespace . ";";
         }, $classesNamespace);
 
-        $imports = array_unique(array_merge($exisingImports, $classesNamespace));
+        if (preg_match('/(?P<imports>(?:^use [^;{]+;$\n?)+)/m', $content, $match)) {
+            $imports = explode("\n", trim($match['imports']));
 
-        sort($imports);
+            $imports = array_unique(array_merge($imports, $classesNamespace));
 
-        $imports = "\n\n" . implode("\n", $imports) . "\n";
+            sort($imports);
 
-        $content = substr_replace(
-            $content,
-            $imports, $namespaceSemicolonPos + 1,
-            ($classKeywordPos - $namespaceSemicolonPos) - 1
-        );
+            $content = str_replace(trim($match['imports']), implode("\n", $imports), $content);
+        } else {
+            // if no imports exist
+            // adding imports at the top of file
+            $namespacePos = strpos($content, 'namespace');
+            $namespaceSemicolonPos = strpos($content, ';', $namespacePos);
+            $content = substr_replace(
+                $content,
+                "\n\n" . implode("\n", $classesNamespace),
+                $namespaceSemicolonPos+1,
+                0
+            );
+        }
+
     }
 }
 

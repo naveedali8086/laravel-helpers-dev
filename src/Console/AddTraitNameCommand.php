@@ -35,6 +35,8 @@ class AddTraitNameCommand extends Command
         // Read the contents of the model file
         $content = File::get($filePath);
 
+        insertImports($content, $traitsToAdd);
+
         // Find the position of class opening bracket
         $classOpeningPosition = strpos($content, '{');
 
@@ -139,9 +141,6 @@ class AddTraitNameCommand extends Command
                 }
             }
         }
-
-        insertImports($content, $traitsToAdd);
-
         // Write the modified contents back to the file
         File::put($filePath, $content);
 
