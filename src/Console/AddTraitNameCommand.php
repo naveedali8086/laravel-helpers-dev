@@ -16,7 +16,6 @@ class AddTraitNameCommand extends Command
     {
         $traitsToAdd = $this->argument('traits');
 
-        $traitsToAdd = preg_replace('/\s+/', '', $traitsToAdd);
         $traitsToAdd = explode(',', $traitsToAdd);
         $traitsToAdd = array_map(function ($trait) {
             // first remove "\", "/" from the start of the string then replace all "\" from "/"
