@@ -33,8 +33,8 @@ if (!function_exists('copy_migrations')) {
     }
 }
 
-if (!function_exists('insertImports')) {
-    function insertImports(string &$content, array|string $classesNamespace): void
+if (!function_exists('insert_imports')) {
+    function insert_imports(string &$content, array|string $classesNamespace): void
     {
         $classesNamespace = is_string($classesNamespace) ? [$classesNamespace] : $classesNamespace;
 
@@ -59,7 +59,7 @@ if (!function_exists('insertImports')) {
             $content = substr_replace(
                 $content,
                 "\n\n" . implode("\n", $classesNamespace),
-                $namespaceSemicolonPos+1,
+                $namespaceSemicolonPos + 1,
                 0
             );
         }
@@ -99,25 +99,25 @@ if (!function_exists('create_table_migration_exists')) {
 
         return $migrationFileFoundFor;
     }
+}
 
-    if (!function_exists('getLaravelMajorVersion')) {
-        function getLaravelMajorVersion(): string
-        {
-            $laravelVersion = exec('php artisan -V');
-            // because laravel has semantic versioning
-            preg_match('/\d+\.\d+\.\d+/', $laravelVersion, $matches);
-            return explode('.', $matches[0])[0];
-        }
+if (!function_exists('get_laravel_major_version')) {
+    function get_laravel_major_version(): string
+    {
+        $laravelVersion = exec('php artisan -V');
+        // because laravel has semantic versioning
+        preg_match('/\d+\.\d+\.\d+/', $laravelVersion, $matches);
+        return explode('.', $matches[0])[0];
     }
+}
 
-    if (!function_exists('getLaravelSemanticVersionSum')) {
-        function getLaravelSemanticVersionSum(): float|int
-        {
-            $laravelVersion = exec('php artisan -V');
-            // because laravel has semantic versioning
-            preg_match('/\d+\.\d+\.\d+/', $laravelVersion, $matches);
-            $versionParts = explode('.', $matches[0]);
-            return array_sum($versionParts);
-        }
+if (!function_exists('get_laravel_semantic_version_sum')) {
+    function get_laravel_semantic_version_sum(): float|int
+    {
+        $laravelVersion = exec('php artisan -V');
+        // because laravel has semantic versioning
+        preg_match('/\d+\.\d+\.\d+/', $laravelVersion, $matches);
+        $versionParts = explode('.', $matches[0]);
+        return array_sum($versionParts);
     }
 }
