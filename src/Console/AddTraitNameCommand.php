@@ -148,7 +148,7 @@ class AddTraitNameCommand extends Command
             $filePath = str_replace('/', '\\', $filePath);
         }
 
-        $this->info(sprintf("\n Trait (%s) added to the %s", implode(', ', $traitNames), $filePath));
+        $this->line(sprintf("<fg=blue>Trait (%s) added to the %s</>", implode(', ', $traitNames), $filePath));
     }
 
     protected function getFilePath($name): string
